@@ -15,14 +15,14 @@ def user_created(sender, instance, created, **kwargs):
     if created:
         send_welcome_email(instance)
 
-@receiver(post_save, sender=CustomUser)
+@receiver(post_save, sender=User)
 def create_api_key(sender, instance, created, **kwargs):
     """Yeni kullanıcı için API key oluştur"""
     if created and not instance.api_key:
         instance.generate_api_key()
 
 
-@receiver(post_save, sender=CustomUser)
+@receiver(post_save, sender=User)
 def log_subscription_change(sender, instance, **kwargs):
     """Abonelik değişikliğini logla"""
     if kwargs.get('update_fields') and 'subscription_plan' in kwargs['update_fields']:
