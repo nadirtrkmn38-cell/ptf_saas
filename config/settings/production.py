@@ -7,11 +7,11 @@ from .base import *
 
 DEBUG = False
 
-SITE_URL = os.environ.get('SITE_URL', 'https://www.ptftahmin.com')
+SITE_URL = os.environ.get('SITE_URL', 'nnemuritor.onrender.com')
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ['nnemuritor.onrender.com', 'localhost', '127.0.0.1']
 
 import dj_database_url
 
