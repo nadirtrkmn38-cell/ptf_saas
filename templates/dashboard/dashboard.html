@@ -1,0 +1,262 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Dashboard - PTF Tahmin{% endblock %}
+
+{% block content %}
+<div class="flex flex-col lg:flex-row gap-6">
+    <!-- Sidebar -->
+    <div class="w-full lg:w-64 space-y-4">
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <h3 class="font-bold">Hoş geldin, {{ user.first_name|default:user.email }}</h3>
+                <p class="text-sm opacity-70">
+                    Plan:
+                    <span class="badge {% if is_premium %}badge-primary{% else %}badge-ghost{% endif %}">
+                        {{ user.get_subscription_plan_display }}
+                    </span>
+                </p>
+                {% if not is_premium %}
+                <a href="{% url 'pricing' %}" class="btn btn-primary btn-sm mt-2">
+                    Pro'ya Yükselt
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Menü -->
+        <ul class="menu bg-base-100 rounded-box shadow">
+            <li><a href="{% url 'dashboard' %}" class="active">📊 Dashboard</a></li>
+            <li><a href="{% url 'predictions' %}">🔮 Tahminler</a></li>
+            {% if is_premium %}
+            <li><a href="{% url 'model_performance' %}">📈 Performans</a></li>
+            {% endif %}
+            <li><a href="{% url 'api_settings' %}">🔑 API Ayarları</a></li>
+            <li><a href="{% url 'subscription_detail' %}">💳 Abonelik</a></li>
+        </ul>
+
+        <!-- API Kullanımı -->
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <h4 class="font-semibold text-sm">API Kullanımı</h4>
+                <progress class="progress progress-primary w-full"
+                          value="{{ user.api_calls_today }}"
+                          max="{{ user.get_api_limit }}">
+                </progress>
+                <p class="text-xs opacity-70">
+                    {{ user.api_calls_today }} / {{ user.get_api_limit }} çağrı
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ana İçerik -->
+    <div class="flex-1 space-y-6">
+        {% if is_premium %}
+        <!-- Premium: 3 Günlük Özet -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {% for summary in daily_summaries %}
+            {% if summary %}
+            <div class="card bg-base-100 shadow">
+                <div class="card-body">
+                    <h3 class="font-semibold">{{ summary.date }}</h3>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                            <div class="text-success font-bold">{{ summary.min_price|floatformat:0 }}₺</div>
+                            <div class="text-xs opacity-70">Min</div>
+                        </div>
+                        <div>
+                            <div class="text-primary font-bold">{{ summary.avg_price|floatformat:0 }}₺</div>
+                            <div class="text-xs opacity-70">Ort</div>
+                        </div>
+                        <div>
+                            <div class="text-error font-bold">{{ summary.max_price|floatformat:0 }}₺</div>
+                            <div class="text-xs opacity-70">Max</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Premium: Detaylı Grafik -->
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <h3 class="card-title">72 Saatlik PTF Tahmini</h3>
+                <div style="position: relative; height: 400px; width: 100%;">
+                    <canvas id="ptfChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium: Saatlik Tablo -->
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <h3 class="card-title">Saatlik Detay</h3>
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra table-sm">
+                        <thead>
+                            <tr>
+                                <th>Tarih/Saat</th>
+                                <th>Tahmin (TL/MWh)</th>
+                                <th>Güven</th>
+                                <th>Aralık</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pred in predictions|slice:":24" %}
+                            <tr>
+                                <td>{{ pred.date }} {{ pred.hour }}:00</td>
+                                <td class="font-mono font-bold">{{ pred.predicted_price|floatformat:2 }}</td>
+                                <td>
+                                    <div class="badge {% if pred.confidence > 0.8 %}badge-success{% elif pred.confidence > 0.6 %}badge-warning{% else %}badge-error{% endif %} badge-sm">
+                                        {{ pred.confidence|floatformat:0 }}%
+                                    </div>
+                                </td>
+                                <td class="text-xs opacity-70">
+                                    {{ pred.lower_bound|floatformat:0 }} - {{ pred.upper_bound|floatformat:0 }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-4">
+                    <a href="{% url 'predictions' %}" class="btn btn-outline btn-sm">
+                        Tüm Tahminleri Gör →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Free: Kısıtlı Görünüm -->
+        <div class="alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>
+                Ücretsiz planda sadece yarının ilk 6 saatini görebilirsiniz.
+                <a href="{% url 'pricing' %}" class="link">Pro'ya yükseltin</a> ve 72 saatlik tahminlere erişin.
+            </span>
+        </div>
+
+        {% if tomorrow_summary %}
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <h3 class="card-title">Yarın ({{ tomorrow }}) - Özet</h3>
+                <div class="stats stats-vertical lg:stats-horizontal shadow">
+                    <div class="stat">
+                        <div class="stat-title">Minimum</div>
+                        <div class="stat-value text-success">{{ tomorrow_summary.min_price|floatformat:0 }}₺</div>
+                        <div class="stat-desc">Saat {{ tomorrow_summary.min_hour }}:00</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-title">Ortalama</div>
+                        <div class="stat-value text-primary">{{ tomorrow_summary.avg_price|floatformat:0 }}₺</div>
+                        <div class="stat-desc">TL/MWh</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-title">Maksimum</div>
+                        <div class="stat-value text-error">{{ tomorrow_summary.max_price|floatformat:0 }}₺</div>
+                        <div class="stat-desc">Saat {{ tomorrow_summary.max_hour }}:00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Free: İlk 6 Saat -->
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <h3 class="card-title">Saatlik Tahmin (Önizleme)</h3>
+                <div class="overflow-x-auto">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Saat</th>
+                                <th>Tahmin (TL/MWh)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pred in limited_predictions %}
+                            <tr>
+                                <td>{{ pred.hour }}:00</td>
+                                <td class="font-mono font-bold">{{ pred.predicted_price|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Blur overlay for locked content -->
+                <div class="relative mt-4">
+                    <div class="h-40 bg-gradient-to-t from-base-100 to-transparent absolute inset-0 flex items-end justify-center pb-4">
+                        <a href="{% url 'pricing' %}" class="btn btn-primary">
+                            🔓 Tamamını Görmek İçin Pro'ya Yükselt
+                        </a>
+                    </div>
+                    <div class="blur-sm opacity-50">
+                        <table class="table">
+                            <tbody>
+                                <tr><td>07:00</td><td>****</td></tr>
+                                <tr><td>08:00</td><td>****</td></tr>
+                                <tr><td>09:00</td><td>****</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if is_premium and predictions %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('ptfChart').getContext('2d');
+
+    const predictions = {{ predictions|safe }};
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: predictions.map(p => p.date + ' ' + p.hour + ':00'),
+            datasets: [{
+                label: 'Tahmin (TL/MWh)',
+                data: predictions.map(p => p.predicted_price),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'TL/MWh'
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxTicksLimit: 12,
+                        maxRotation: 45
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Ödeme - {{ plan.name }} - PTF Tahmin{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold">Ödeme</h1>
+        <p class="opacity-70 mt-2">{{ plan.name }} planına abone olun</p>
+    </div>
+    
+    <!-- Plan Özeti -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold">{{ plan.name }}</h2>
+                    <p class="opacity-70">{{ plan.get_interval_display }} abonelik</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-3xl font-bold text-primary">{{ plan.price|floatformat:0 }}₺</div>
+                    <div class="text-sm opacity-70">/{{ plan.get_interval_display|lower }}</div>
+                </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <ul class="space-y-2">
+                <li class="flex items-center gap-2">
+                    <span class="text-success">✓</span>
+                    {{ plan.api_calls_per_day }} API çağrısı/gün
+                </li>
+                <li class="flex items-center gap-2">
+                    <span class="text-success">✓</span>
+                    {{ plan.history_days }} günlük geçmiş veri
+                </li>
+                {% for feature in plan.get_features_list %}
+                <li class="flex items-center gap-2">
+                    <span class="text-success">✓</span>
+                    {{ feature }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Ödeme Formu -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title">Ödeme Bilgileri</h3>
+            
+            <form method="POST" class="mt-4">
+                {% csrf_token %}
+                
+                <!-- Fatura Adresi -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Ad</span>
+                        </label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" 
+                            class="input input-bordered" required>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Soyad</span>
+                        </label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" 
+                            class="input input-bordered" required>
+                    </div>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text">Telefon</span>
+                    </label>
+                    <input type="tel" name="phone" value="{{ user.phone }}" 
+                        placeholder="+90 5XX XXX XX XX" class="input input-bordered" required>
+                </div>
+                
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text">Şirket (Opsiyonel)</span>
+                    </label>
+                    <input type="text" name="company" value="{{ user.company_name }}" 
+                        class="input input-bordered">
+                </div>
+                
+                <!-- Sözleşme Onayı -->
+                <div class="form-control mb-6">
+                    <label class="label cursor-pointer justify-start gap-2">
+                        <input type="checkbox" name="terms" class="checkbox checkbox-primary" required>
+                        <span class="label-text">
+                            <a href="#" class="link">Mesafeli Satış Sözleşmesi</a>'ni ve 
+                            <a href="#" class="link">Gizlilik Politikası</a>'nı okudum, kabul ediyorum.
+                        </span>
+                    </label>
+                </div>
+                
+                <!-- Toplam -->
+                <div class="bg-base-200 rounded-lg p-4 mb-6">
+                    <div class="flex justify-between items-center">
+                        <span>{{ plan.name }} ({{ plan.get_interval_display }})</span>
+                        <span>{{ plan.price|floatformat:0 }}₺</span>
+                    </div>
+                    <div class="divider my-2"></div>
+                    <div class="flex justify-between items-center font-bold text-lg">
+                        <span>Toplam</span>
+                        <span class="text-primary">{{ plan.price|floatformat:0 }}₺</span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    💳 Ödemeye Geç
+                </button>
+                
+                <p class="text-center text-sm opacity-70 mt-4">
+                    🔒 Ödemeler iyzico güvencesiyle işlenir
+                </p>
+            </form>
+        </div>
+    </div>
+    
+    <div class="text-center mt-6">
+        <a href="{% url 'pricing' %}" class="link">← Planlara Geri Dön</a>
+    </div>
+</div>
+{% endblock %}

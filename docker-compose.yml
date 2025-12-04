@@ -1,0 +1,71 @@
+version: '3.9'
+
+services:
+  # Django Web Application
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DJANGO_SECRET_KEY=your-super-secret-key-for-development-only-change-in-production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/ptf_saas
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+  
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=ptf_saas
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+  
+  # Redis
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  
+  # Celery Worker
+  celery:
+    build: .
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DJANGO_SECRET_KEY=your-super-secret-key-for-development-only-change-in-production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/ptf_saas
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+  
+  # Celery Beat
+  celery-beat:
+    build: .
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DJANGO_SECRET_KEY=your-super-secret-key-for-development-only-change-in-production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/ptf_saas
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:

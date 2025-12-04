@@ -1,0 +1,197 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Abonelik - PTF Tahmin{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8">Abonelik Yönetimi</h1>
+    
+    <!-- Mevcut Plan -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title">Mevcut Planınız</h2>
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl font-bold">{{ user.get_subscription_plan_display }}</span>
+                        {% if is_premium %}
+                        <span class="badge badge-primary">Aktif</span>
+                        {% else %}
+                        <span class="badge badge-ghost">Ücretsiz</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if subscription %}
+                    <p class="text-sm opacity-70 mt-2">
+                        Yenileme tarihi: {{ subscription.current_period_end|date:"d.m.Y" }}
+                    </p>
+                    {% if subscription.cancel_at_period_end %}
+                    <p class="text-sm text-warning mt-1">
+                        ⚠️ Dönem sonunda iptal edilecek
+                    </p>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                
+                <div class="flex gap-2">
+                    {% if user.subscription_plan != 'enterprise' %}
+                    <a href="{% url 'pricing' %}" class="btn btn-primary">
+                        Planı Yükselt
+                    </a>
+                    {% endif %}
+                    
+                    {% if subscription and subscription.status == 'active' and not subscription.cancel_at_period_end %}
+                    <button onclick="cancelModal.showModal()" class="btn btn-outline btn-error">
+                        İptal Et
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Plan Özellikleri -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title">Plan Özellikleri</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div class="stat bg-base-200 rounded-box">
+                    <div class="stat-title">API Limiti</div>
+                    <div class="stat-value text-lg">{{ user.get_api_limit }}</div>
+                    <div class="stat-desc">çağrı/gün</div>
+                </div>
+                
+                <div class="stat bg-base-200 rounded-box">
+                    <div class="stat-title">Bugün Kullanılan</div>
+                    <div class="stat-value text-lg">{{ user.api_calls_today }}</div>
+                    <div class="stat-desc">çağrı</div>
+                </div>
+                
+                <div class="stat bg-base-200 rounded-box">
+                    <div class="stat-title">Kalan</div>
+                    <div class="stat-value text-lg text-success">{{ api_calls_remaining }}</div>
+                    <div class="stat-desc">çağrı</div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <h3 class="font-semibold mb-2">Dahil Özellikler:</h3>
+                <ul class="space-y-2">
+                    {% if user.subscription_plan == 'free' %}
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> Günlük PTF özeti</li>
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> 7 günlük geçmiş veri</li>
+                    <li class="flex items-center gap-2 opacity-50"><span>✗</span> 72 saatlik tahmin</li>
+                    <li class="flex items-center gap-2 opacity-50"><span>✗</span> API erişimi</li>
+                    {% elif user.subscription_plan == 'basic' %}
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> Saatlik tahminler</li>
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> 30 günlük geçmiş veri</li>
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> Email bildirimleri</li>
+                    <li class="flex items-center gap-2 opacity-50"><span>✗</span> 72 saatlik tahmin</li>
+                    {% elif user.subscription_plan == 'pro' %}
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> 72 saatlik tahmin</li>
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> 365 günlük geçmiş veri</li>
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> REST API erişimi</li>
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> Öncelikli destek</li>
+                    {% elif user.subscription_plan == 'enterprise' %}
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> Tüm Pro özellikleri</li>
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> Sınırsız geçmiş veri</li>
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> SLA garantisi</li>
+                    <li class="flex items-center gap-2"><span class="text-success">✓</span> Dedicated destek</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ödeme Geçmişi -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Ödeme Geçmişi</h2>
+            
+            {% if payments %}
+            <div class="overflow-x-auto mt-4">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Tutar</th>
+                            <th>Durum</th>
+                            <th>Fatura</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.payment_date|date:"d.m.Y H:i" }}</td>
+                            <td>{{ payment.amount }} ₺</td>
+                            <td>
+                                {% if payment.status == 'completed' %}
+                                <span class="badge badge-success">Tamamlandı</span>
+                                {% elif payment.status == 'pending' %}
+                                <span class="badge badge-warning">Beklemede</span>
+                                {% elif payment.status == 'failed' %}
+                                <span class="badge badge-error">Başarısız</span>
+                                {% else %}
+                                <span class="badge badge-ghost">{{ payment.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if payment.invoice_url %}
+                                <a href="{{ payment.invoice_url }}" target="_blank" class="link link-primary">
+                                    PDF İndir
+                                </a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center py-8 opacity-70">Henüz ödeme kaydı bulunmuyor.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- İptal Modal -->
+<dialog id="cancelModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Aboneliği İptal Et</h3>
+        <p class="py-4">
+            Aboneliğinizi iptal etmek istediğinizden emin misiniz?
+            Mevcut dönemin sonuna kadar hizmetiniz devam edecektir.
+        </p>
+        
+        <form method="POST" action="{% url 'cancel_subscription' %}">
+            {% csrf_token %}
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text">İptal nedeniniz (opsiyonel)</span>
+                </label>
+                <textarea name="reason" class="textarea textarea-bordered" rows="3" 
+                    placeholder="Geri bildiriminiz bizim için değerli..."></textarea>
+            </div>
+            
+            <div class="form-control mb-4">
+                <label class="label cursor-pointer justify-start gap-2">
+                    <input type="checkbox" name="immediate" value="true" class="checkbox checkbox-error">
+                    <span class="label-text">Hemen iptal et (dönem sonunu bekleme)</span>
+                </label>
+            </div>
+            
+            <div class="modal-action">
+                <button type="button" onclick="cancelModal.close()" class="btn">Vazgeç</button>
+                <button type="submit" class="btn btn-error">İptal Et</button>
+            </div>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends 'base/base.html' %}
+
+{% block title %}PTF Tahmin - Türkiye Elektrik Piyasası Fiyat Tahminleri{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero min-h-[70vh] bg-gradient-to-br from-primary/10 to-secondary/10 rounded-box">
+    <div class="hero-content text-center">
+        <div class="max-w-2xl">
+            <h1 class="text-5xl font-bold">
+                ⚡ Elektrik Piyasası
+                <span class="text-primary">Fiyat Tahminleri</span>
+            </h1>
+            <p class="py-6 text-lg opacity-80">
+                Makine öğrenmesi ile 72 saatlik PTF tahminleri.
+                Enerji maliyetlerinizi optimize edin, riskleri yönetin.
+            </p>
+            
+            {% if tomorrow_summary %}
+            <!-- Yarınki Özet Kartı -->
+            <div class="stats shadow bg-base-100 mb-6">
+                <div class="stat">
+                    <div class="stat-title">Yarın Min</div>
+                    <div class="stat-value text-success">{{ tomorrow_summary.min_price|floatformat:0 }} ₺</div>
+                    <div class="stat-desc">Saat {{ tomorrow_summary.min_hour }}:00</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-title">Yarın Ort</div>
+                    <div class="stat-value text-primary">{{ tomorrow_summary.avg_price|floatformat:0 }} ₺</div>
+                    <div class="stat-desc">TL/MWh</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-title">Yarın Max</div>
+                    <div class="stat-value text-error">{{ tomorrow_summary.max_price|floatformat:0 }} ₺</div>
+                    <div class="stat-desc">Saat {{ tomorrow_summary.max_hour }}:00</div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="flex gap-4 justify-center">
+                <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg">
+                    Ücretsiz Başla
+                </a>
+                <a href="{% url 'pricing' %}" class="btn btn-outline btn-lg">
+                    Planları Gör
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="py-16">
+    <h2 class="text-3xl font-bold text-center mb-12">Neden PTF Tahmin?</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body items-center text-center">
+                <div class="text-5xl mb-4">🎯</div>
+                <h3 class="card-title">Yüksek Doğruluk</h3>
+                <p class="opacity-70">XGBoost ve LightGBM modelleri ile %85+ doğruluk oranı</p>
+            </div>
+        </div>
+        
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body items-center text-center">
+                <div class="text-5xl mb-4">⏰</div>
+                <h3 class="card-title">72 Saat Önceden</h3>
+                <p class="opacity-70">Gün öncesi piyasası için 3 günlük tahminler</p>
+            </div>
+        </div>
+        
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body items-center text-center">
+                <div class="text-5xl mb-4">🔌</div>
+                <h3 class="card-title">REST API</h3>
+                <p class="opacity-70">Sistemlerinize kolayca entegre edin</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works -->
+<div class="py-16 bg-base-100 rounded-box">
+    <h2 class="text-3xl font-bold text-center mb-12">Nasıl Çalışır?</h2>
+    
+    <ul class="steps steps-vertical lg:steps-horizontal w-full">
+        <li class="step step-primary">
+            <div class="text-left">
+                <h4 class="font-bold">Veri Toplama</h4>
+                <p class="text-sm opacity-70">EPİAŞ, yük, rüzgar, döviz</p>
+            </div>
+        </li>
+        <li class="step step-primary">
+            <div class="text-left">
+                <h4 class="font-bold">Özellik Mühendisliği</h4>
+                <p class="text-sm opacity-70">100+ tahmine dayalı özellik</p>
+            </div>
+        </li>
+        <li class="step step-primary">
+            <div class="text-left">
+                <h4 class="font-bold">ML Modeli</h4>
+                <p class="text-sm opacity-70">XGBoost ensemble</p>
+            </div>
+        </li>
+        <li class="step step-primary">
+            <div class="text-left">
+                <h4 class="font-bold">Tahmin</h4>
+                <p class="text-sm opacity-70">72 saatlik fiyat tahmini</p>
+            </div>
+        </li>
+    </ul>
+</div>
+
+<!-- Pricing Preview -->
+<div class="py-16">
+    <h2 class="text-3xl font-bold text-center mb-4">Fiyatlandırma</h2>
+    <p class="text-center opacity-70 mb-12">İhtiyacınıza uygun planı seçin</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {% for plan in plans %}
+        <div class="card bg-base-100 shadow-xl {% if plan.is_featured %}border-2 border-primary{% endif %}">
+            {% if plan.is_featured %}
+            <div class="badge badge-primary absolute -top-2 right-4">Popüler</div>
+            {% endif %}
+            <div class="card-body">
+                <h3 class="card-title justify-center">{{ plan.name }}</h3>
+                <div class="text-center py-4">
+                    <span class="text-4xl font-bold">{{ plan.price|floatformat:0 }}₺</span>
+                    <span class="opacity-70">/ay</span>
+                </div>
+                <ul class="space-y-2 mb-4">
+                    <li class="flex items-center gap-2">
+                        <span class="text-success">✓</span>
+                        {{ plan.api_calls_per_day }} API çağrısı/gün
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="text-success">✓</span>
+                        {{ plan.history_days }} günlük geçmiş
+                    </li>
+                </ul>
+                <div class="card-actions justify-center">
+                    <a href="{% url 'checkout' plan.slug %}" class="btn {% if plan.is_featured %}btn-primary{% else %}btn-outline{% endif %} w-full">
+                        Seç
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <!-- Default plans if none in DB -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title justify-center">Ücretsiz</h3>
+                <div class="text-center py-4">
+                    <span class="text-4xl font-bold">0₺</span>
+                    <span class="opacity-70">/ay</span>
+                </div>
+                <ul class="space-y-2 mb-4">
+                    <li class="flex items-center gap-2">✓ 10 API çağrısı/gün</li>
+                    <li class="flex items-center gap-2">✓ 7 günlük geçmiş</li>
+                    <li class="flex items-center gap-2">✓ Günlük özet</li>
+                </ul>
+                <div class="card-actions justify-center">
+                    <a href="{% url 'account_signup' %}" class="btn btn-outline w-full">Başla</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card bg-base-100 shadow-xl border-2 border-primary">
+            <div class="badge badge-primary absolute -top-2 right-4">Popüler</div>
+            <div class="card-body">
+                <h3 class="card-title justify-center">Profesyonel</h3>
+                <div class="text-center py-4">
+                    <span class="text-4xl font-bold">799₺</span>
+                    <span class="opacity-70">/ay</span>
+                </div>
+                <ul class="space-y-2 mb-4">
+                    <li class="flex items-center gap-2">✓ 1000 API çağrısı/gün</li>
+                    <li class="flex items-center gap-2">✓ 365 günlük geçmiş</li>
+                    <li class="flex items-center gap-2">✓ 72 saatlik tahmin</li>
+                    <li class="flex items-center gap-2">✓ Öncelikli destek</li>
+                </ul>
+                <div class="card-actions justify-center">
+                    <a href="{% url 'account_signup' %}" class="btn btn-primary w-full">Başla</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title justify-center">Kurumsal</h3>
+                <div class="text-center py-4">
+                    <span class="text-4xl font-bold">2499₺</span>
+                    <span class="opacity-70">/ay</span>
+                </div>
+                <ul class="space-y-2 mb-4">
+                    <li class="flex items-center gap-2">✓ Sınırsız API</li>
+                    <li class="flex items-center gap-2">✓ Sınırsız geçmiş</li>
+                    <li class="flex items-center gap-2">✓ SLA garantisi</li>
+                    <li class="flex items-center gap-2">✓ Dedicated destek</li>
+                </ul>
+                <div class="card-actions justify-center">
+                    <a href="{% url 'account_signup' %}" class="btn btn-outline w-full">İletişime Geç</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="py-16">
+    <div class="card bg-primary text-primary-content">
+        <div class="card-body items-center text-center">
+            <h2 class="card-title text-3xl">Hemen Başlayın</h2>
+            <p class="max-w-md">
+                Ücretsiz hesap oluşturun ve elektrik piyasası tahminlerine erişin.
+            </p>
+            <div class="card-actions mt-4">
+                <a href="{% url 'account_signup' %}" class="btn btn-secondary btn-lg">
+                    Ücretsiz Kayıt Ol
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

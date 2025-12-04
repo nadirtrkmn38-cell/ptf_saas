@@ -1,0 +1,283 @@
+{% extends 'base/base.html' %}
+
+{% block title %}PTF Tahminleri - PTF Tahmin{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold">PTF Tahminleri</h1>
+            <p class="opacity-70">72 saatlik elektrik piyasası fiyat tahminleri</p>
+        </div>
+
+        {% if is_premium %}
+        <div class="flex gap-2">
+            <a href="{% url 'model_performance' %}" class="btn btn-outline">
+                📈 Model Performansı
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if is_premium %}
+    <!-- Premium: Tam Görünüm -->
+    <!-- 3 Günlük Özet Kartları -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {% for summary in next_3_days %}
+        {% if summary %}
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <h3 class="font-semibold text-lg">{{ summary.date }}</h3>
+                <div class="grid grid-cols-3 gap-2 text-center mt-2">
+                    <div>
+                        <div class="text-2xl font-bold text-success">{{ summary.min_price|floatformat:0 }}</div>
+                        <div class="text-xs opacity-70">Min ({{ summary.min_hour }}:00)</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-primary">{{ summary.avg_price|floatformat:0 }}</div>
+                        <div class="text-xs opacity-70">Ortalama</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-error">{{ summary.max_price|floatformat:0 }}</div>
+                        <div class="text-xs opacity-70">Max ({{ summary.max_hour }}:00)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Grafik -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title">72 Saatlik Tahmin Grafiği</h2>
+            <div style="position: relative; height: 400px; width: 100%;">
+                <canvas id="ptfChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detaylı Tablo -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Saatlik Detay</h2>
+
+            <div class="overflow-x-auto mt-4">
+                <table class="table table-zebra table-sm">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Saat</th>
+                            <th>Tahmin (TL/MWh)</th>
+                            <th>Alt Sınır</th>
+                            <th>Üst Sınır</th>
+                            <th>Güven</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pred in predictions %}
+                        <tr>
+                            <td>{{ pred.date }}</td>
+                            <td>{{ pred.hour }}:00</td>
+                            <td class="font-mono font-bold">{{ pred.predicted_price|floatformat:2 }}</td>
+                            <td class="font-mono text-success">{{ pred.lower_bound|floatformat:0 }}</td>
+                            <td class="font-mono text-error">{{ pred.upper_bound|floatformat:0 }}</td>
+                            <td>
+                                <div class="radial-progress text-xs {% if pred.confidence > 0.8 %}text-success{% elif pred.confidence > 0.6 %}text-warning{% else %}text-error{% endif %}"
+                                     style="--value:{{ pred.confidence|floatformat:0 }}; --size:2rem;">
+                                    {{ pred.confidence|floatformat:0 }}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Free: Kısıtlı Görünüm -->
+
+    <div class="alert alert-info mb-8">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+            <h3 class="font-bold">Ücretsiz Plan</h3>
+            <p>
+                Sadece yarının ilk 6 saatini görebilirsiniz. 72 saatlik tam tahminler için
+                <a href="{% url 'pricing' %}" class="link font-bold">Pro'ya yükseltin</a>.
+            </p>
+        </div>
+    </div>
+
+    {% if tomorrow_summary %}
+    <!-- Yarın Özeti -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title">Yarın - {{ tomorrow_summary.date }}</h2>
+
+            <div class="stats stats-vertical lg:stats-horizontal shadow mt-4">
+                <div class="stat">
+                    <div class="stat-title">Minimum Fiyat</div>
+                    <div class="stat-value text-success">{{ tomorrow_summary.min_price|floatformat:0 }}₺</div>
+                    <div class="stat-desc">Saat {{ tomorrow_summary.min_hour }}:00</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-title">Ortalama</div>
+                    <div class="stat-value text-primary">{{ tomorrow_summary.avg_price|floatformat:0 }}₺</div>
+                    <div class="stat-desc">TL/MWh</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-title">Maksimum Fiyat</div>
+                    <div class="stat-value text-error">{{ tomorrow_summary.max_price|floatformat:0 }}₺</div>
+                    <div class="stat-desc">Saat {{ tomorrow_summary.max_hour }}:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kısıtlı Tablo -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Saatlik Tahmin (Önizleme)</h2>
+
+            <div class="overflow-x-auto mt-4">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Saat</th>
+                            <th>Tahmin (TL/MWh)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pred in limited_predictions %}
+                        <tr>
+                            <td>{{ pred.hour }}:00</td>
+                            <td class="font-mono font-bold">{{ pred.predicted_price|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Locked Content Overlay -->
+            <div class="relative mt-4">
+                <div class="absolute inset-0 bg-gradient-to-t from-base-100 via-base-100/80 to-transparent flex items-center justify-center">
+                    <div class="text-center p-8">
+                        <div class="text-4xl mb-4">🔒</div>
+                        <h3 class="text-xl font-bold mb-2">Tam Tahminler Pro'da</h3>
+                        <p class="opacity-70 mb-4">72 saatlik detaylı tahminlere erişin</p>
+                        <a href="{% url 'pricing' %}" class="btn btn-primary">
+                            Pro'ya Yükselt
+                        </a>
+                    </div>
+                </div>
+                <div class="blur-sm opacity-30 pointer-events-none">
+                    <table class="table">
+                        <tbody>
+                            {% for i in "0123456789" %}
+                            <tr>
+                                <td>{{ forloop.counter|add:6 }}:00</td>
+                                <td>****</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if is_premium and predictions %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('ptfChart').getContext('2d');
+    const predictions = {{ predictions|safe }};
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: predictions.map(p => {
+                const date = new Date(p.datetime);
+                return date.toLocaleDateString('tr-TR', {weekday: 'short'}) + ' ' + p.hour + ':00';
+            }),
+            datasets: [
+                {
+                    label: 'Tahmin',
+                    data: predictions.map(p => p.predicted_price),
+                    borderColor: '#3b82f6',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                },
+                {
+                    label: 'Üst Sınır',
+                    data: predictions.map(p => p.upper_bound),
+                    borderColor: 'rgba(239, 68, 68, 0.3)',
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                },
+                {
+                    label: 'Alt Sınır',
+                    data: predictions.map(p => p.lower_bound),
+                    borderColor: 'rgba(34, 197, 94, 0.3)',
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'TL/MWh'
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxTicksLimit: 12,
+                        maxRotation: 45,
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.raw.toFixed(2) + ' TL/MWh';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base/base.html' %}
+
+{% block title %}404 - Sayfa Bulunamadı{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[60vh]">
+    <div class="hero-content text-center">
+        <div class="max-w-md">
+            <h1 class="text-9xl font-bold text-primary">404</h1>
+            <p class="text-2xl font-semibold mt-4">Sayfa Bulunamadı</p>
+            <p class="py-6 opacity-70">
+                Aradığınız sayfa mevcut değil veya taşınmış olabilir.
+            </p>
+            <div class="flex gap-4 justify-center">
+                <a href="{% url 'home' %}" class="btn btn-primary">Ana Sayfa</a>
+                <a href="javascript:history.back()" class="btn btn-ghost">Geri Dön</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+*.pot
+*.pyc
+media/
+staticfiles/
+
+# Environment
+.env
+.env.local
+.env.production
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ML Models
+ml_models/*.pkl
+ml_models/saved/
+
+# Cache
+.cache/
+*.cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Secrets
+*.pem
+*.key
