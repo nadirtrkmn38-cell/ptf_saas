@@ -61,3 +61,5 @@ sentry-sdk
 cryptography
 
 drf-spectacular
+
+apps.core
