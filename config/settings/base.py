@@ -247,13 +247,3 @@ SUBSCRIPTION_PLANS = {
 
 # Site URL (email linkleri için)
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
-```
-
-### Son Hamle
-
-Dosyayı tamamen değiştirip kaydettikten sonra terminalden (siyah ekran) şu komutları çalıştır:
-
-```bash
-git add config/settings/base.py
-git commit -m "Settings dosyasi duzeltildi"
-git push -u origin main
