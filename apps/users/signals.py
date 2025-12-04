@@ -6,6 +6,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from .emails import send_welcome_email
+from apps.users.models import CustomUser
 
 User = get_user_model()
 

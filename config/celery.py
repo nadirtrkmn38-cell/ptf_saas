@@ -25,10 +25,9 @@ app.autodiscover_tasks()
 # ============================================================================
 app.conf.beat_schedule = {
     # Her gün saat 06:00'da PTF tahminlerini güncelle
-    'update-daily-predictions': {
+    'update-predictions-daily': {
         'task': 'apps.predictions.tasks.update_daily_predictions',
         'schedule': crontab(hour=6, minute=0),
-        'options': {'queue': 'predictions'}
     },
     
     # Her saat başı tahmin cache'ini güncelle
@@ -58,6 +57,9 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour=8, minute=0, day_of_week=1),  # Pazartesi 08:00
         'options': {'queue': 'reports'}
     },
+    'send-daily-report': {
+        'task': 'apps.predictions.tasks.send_daily_report',
+        'schedule': crontab(hour=7, minute=0),
 }
 
 # Queue'ları tanımla

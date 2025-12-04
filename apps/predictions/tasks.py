@@ -13,6 +13,59 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+@shared_task
+def send_daily_report():
+    """Her gün sabah 06:00'da rapor gönder"""
+    from apps.users.models import CustomUser
+    from .services import PTFPredictionService
+    
+    service = PTFPredictionService()
+    summary = service.get_daily_summary()
+    
+    if not summary:
+        return
+    
+    # Premium kullanıcılara email gönder
+    premium_users = CustomUser.objects.filter(
+        subscription_plan__in=['basic', 'pro', 'enterprise'],
+        subscription_expires__gte=timezone.now()
+    )
+    
+    subject = 'Günlük PTF Tahmin Raporu - ' + summary['date']
+    
+    message = """
+    Günlük PTF Tahmin Özeti
+    =======================
+    
+    Tarih: {date}
+    
+    Minimum Fiyat: {min_price} TL/MWh (Saat {min_hour}:00)
+    Maximum Fiyat: {max_price} TL/MWh (Saat {max_hour}:00)
+    Ortalama Fiyat: {avg_price} TL/MWh
+    
+    Detaylı tahminler için: {url}
+    """.format(
+        date=summary['date'],
+        min_price=summary['min_price'],
+        max_price=summary['max_price'],
+        min_hour=summary['min_hour'],
+        max_hour=summary['max_hour'],
+        avg_price=summary['avg_price'],
+        url=settings.SITE_URL + '/predictions/'
+    )
+    
+    for user in premium_users:
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+            )
+        except Exception as e:
+            logger.error("Email error: " + str(e))
+    
+    logger.info("Daily report sent to " + str(premium_users.count()) + " users")
 
 @shared_task(bind=True, max_retries=3)
 def update_daily_predictions(self):

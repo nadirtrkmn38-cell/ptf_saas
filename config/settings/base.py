@@ -12,35 +12,7 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Application definition
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sites',
-    'django.contrib.humanize',
-    
-    # Third party
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'corsheaders',
-    'django_celery_beat',
-    'crispy_forms',
-    'crispy_tailwind',
-    
-    # Local apps
-    'apps.users',
-    'apps.subscriptions',
-    'apps.predictions',
-    'apps.api',
-    'apps.dashboard',
-]
+INSTALLED_APPS += ['drf_spectacular']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -170,6 +142,12 @@ REST_FRAMEWORK = {
     },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'PTF Tahmin API',
+    'DESCRIPTION': 'Elektrik fiyat tahmin API\'si',
+    'VERSION': '1.0.0',
 }
 
 # JWT Settings
