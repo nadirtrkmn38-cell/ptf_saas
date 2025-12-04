@@ -57,10 +57,12 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour=8, minute=0, day_of_week=1),  # Pazartesi 08:00
         'options': {'queue': 'reports'}
     },
+
     'send-daily-report': {
         'task': 'apps.predictions.tasks.send_daily_report',
         'schedule': crontab(hour=7, minute=0),
-}
+    }
+}  # <--- KRİTİK DÜZELTME: BURADAKİ KAPATMA PARANTEZİ EKSİKTİ!
 
 # Queue'ları tanımla
 app.conf.task_queues = {
