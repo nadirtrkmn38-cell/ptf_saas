@@ -133,7 +133,7 @@ AUTHENTICATION_BACKENDS = [
 
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_SIGNUP_FIELDS = ['email', 'password'] # Yıldızları kaldırdım, hata yapabiliyor
+ACCOUNT_SIGNUP_FIELDS = ['email'] # Yıldızları kaldırdım, hata yapabiliyor
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_SESSION_REMEMBER = True
