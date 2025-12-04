@@ -11,8 +11,40 @@ from datetime import timedelta
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Application definition
-INSTALLED_APPS += ['drf_spectacular']
+# ============================================================================
+# UYGULAMA TANIMLARI (INSTALLED_APPS) - DÜZELTİLDİ
+# ============================================================================
+INSTALLED_APPS = [
+    # Django Apps
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'whitenoise.runserver_nostatic', # Whitenoise (Geliştirme ortamı için)
+    'django.contrib.staticfiles',
+    'django.contrib.sites',  # Allauth için gerekli
+
+    # Third Party Apps
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',
+    'corsheaders',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google', # Google girişi için
+    'crispy_forms',
+    'crispy_tailwind',
+    'django_celery_beat',
+
+    # Local Apps (Senin Uygulamaların)
+    'apps.core',
+    'apps.users',
+    'apps.predictions',
+    'apps.subscriptions',
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -99,11 +131,9 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-
-
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_SIGNUP_FIELDS = ['email', 'password'] # Yıldızları kaldırdım, hata yapabiliyor
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_SESSION_REMEMBER = True
@@ -217,3 +247,13 @@ SUBSCRIPTION_PLANS = {
 
 # Site URL (email linkleri için)
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+```
+
+### Son Hamle
+
+Dosyayı tamamen değiştirip kaydettikten sonra terminalden (siyah ekran) şu komutları çalıştır:
+
+```bash
+git add config/settings/base.py
+git commit -m "Settings dosyasi duzeltildi"
+git push -u origin main
