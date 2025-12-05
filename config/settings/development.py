@@ -8,7 +8,7 @@ DEBUG = True
 
 SECRET_KEY = 'django-insecure-dev-key-change-in-production-12345'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ['*']
 
 SITE_URL = 'http://127.0.0.1:8000'
 
