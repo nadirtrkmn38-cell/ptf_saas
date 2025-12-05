@@ -59,5 +59,7 @@ gunicorn==21.2.0
 sentry-sdk
 
 cryptography
-
 drf-spectacular
+eptr2
+requests
+python-dotenv
