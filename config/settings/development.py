@@ -4,7 +4,7 @@ Django Development Settings
 
 from .base import *
 
-DEBUG = True
+DEBUG = False
 
 SECRET_KEY = 'django-insecure-dev-key-change-in-production-12345'
 
