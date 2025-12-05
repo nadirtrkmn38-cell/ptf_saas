@@ -11,7 +11,7 @@ SITE_URL = os.environ.get('SITE_URL', 'nnemuritor.onrender.com')
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
-ALLOWED_HOSTS = ['nnemuritor.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 import dj_database_url
 
